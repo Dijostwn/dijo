@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Aplikasi Stok Barang Sentral</title>
     <style>
+        /* Desain CSS */
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
         .container { max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
         .info-api { background-color: #d4edda; border-left: 5px solid #28a745; padding: 10px; margin-bottom: 20px; color: #155724; }
@@ -14,16 +15,26 @@
         #tabel-stok { width: 100%; border-collapse: collapse; margin-top: 20px; }
         #tabel-stok th, #tabel-stok td { border: 1px solid #e0e0e0; padding: 15px; text-align: left; }
         .delete-btn { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
-        .download-btn { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; font-weight: bold; }
+        
+        /* Tombol Download */
+        .download-btn { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; }
+        .pdf-btn { padding: 10px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; }
+
+        /* Kelas untuk menyembunyikan kolom aksi saat dicetak ke PDF */
+        @media print {
+            .aksi-kolom { display: none !important; }
+            .no-print { display: none !important; }
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="container" id="content-to-print">
         <h1>Aplikasi Stok Barang (Terpusat) 🌍</h1>
         <div id="api-status" class="info-api">Menghubungkan ke API Server...</div>
 
         <h2>Tambah Barang Baru</h2>
-        <form id="form-tambah">
+        <form id="form-tambah" class="no-print">
             <input type="text" id="nama-barang" placeholder="Nama Barang" required>
             <input type="number" id="kuantitas" placeholder="Kuantitas" required min="1">
             <button type="submit">Tambah Stok</button>
@@ -31,25 +42,29 @@
 
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <h2>Daftar Stok</h2>
-            <button class="download-btn" onclick="downloadInventoryAsCSV()">⬇️ Unduh Data (CSV)</button>
+            <div class="no-print">
+                <button class="download-btn" onclick="downloadInventoryAsCSV()">⬇️ Unduh CSV</button>
+                <button class="pdf-btn" onclick="downloadInventoryAsPDF()">🖨️ Unduh PDF</button>
+            </div>
         </div>
         
         <table id="tabel-stok">
-            <thead><tr><th>ID</th><th>Nama Barang</th><th>Kuantitas</th><th>Aksi</th></tr></thead>
+            <thead><tr><th>ID</th><th>Nama Barang</th><th>Kuantitas</th><th class="aksi-kolom">Aksi</th></tr></thead>
             <tbody id="data-stok"></tbody>
         </table>
     </div>
 
     <script>
-        // URL Railway Anda (Sudah benar)
+        // *** URL API ASLI DARI RAILWAY ANDA ***
         const API_BASE_URL = 'https://inventory-api-production-1cdf.up.railway.app'; 
+        // *************************************
 
         const API_URL = `${API_BASE_URL}/api/items`;
         const formTambah = document.getElementById('form-tambah');
         const dataStokBody = document.getElementById('data-stok');
         const apiStatus = document.getElementById('api-status');
 
-        // Fungsi yang sama untuk mengambil dan menampilkan data (READ)
+        // Fungsi untuk mengambil dan menampilkan data terbaru dari server (READ)
         async function fetchItems() {
             try {
                 const response = await fetch(API_URL); 
@@ -69,11 +84,16 @@
                     row.insertCell().textContent = item.id;
                     row.insertCell().textContent = item.name;
                     row.insertCell().textContent = item.quantity.toLocaleString('id-ID'); 
+                    
+                    // Kolom Aksi
+                    const aksiCell = row.insertCell();
+                    aksiCell.className = 'aksi-kolom'; 
+
                     const deleteButton = document.createElement('button');
                     deleteButton.textContent = 'Hapus';
                     deleteButton.className = 'delete-btn';
                     deleteButton.onclick = () => deleteItem(item.id); 
-                    row.insertCell().appendChild(deleteButton);
+                    aksiCell.appendChild(deleteButton);
                 });
 
             } catch (error) {
@@ -82,51 +102,53 @@
                 dataStokBody.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center;">Periksa koneksi server Anda.</td></tr>';
             }
         }
+        
+        // --- FUNGSI DOWNLOAD PDF ---
+        function downloadInventoryAsPDF() {
+            const element = document.getElementById('content-to-print'); // Kontainer utama
 
-        // --- FUNGSI BARU UNTUK DOWNLOAD DATA ---
+            // Opsi konfigurasi untuk PDF
+            const options = {
+                margin: 10,
+                filename: `stok_barang_${new Date().toISOString().slice(0, 10)}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Panggil library untuk membuat PDF
+            html2pdf().set(options).from(element).save();
+        }
+
+        // --- FUNGSI DOWNLOAD CSV ---
         async function downloadInventoryAsCSV() {
             try {
-                // 1. Ambil data stok terbaru dari server
                 const response = await fetch(API_URL);
                 if (!response.ok) throw new Error('Gagal mengambil data dari server.');
-
                 const inventory = await response.json();
-
                 if (inventory.length === 0) {
                     alert("Tidak ada data untuk diunduh.");
                     return;
                 }
-
-                // 2. Siapkan baris header CSV
                 const headers = ['ID', 'Nama Barang', 'Kuantitas'];
                 let csv = headers.join(',') + '\n';
-
-                // 3. Konversi data JSON ke baris CSV
                 inventory.forEach(item => {
                     const row = [
                         item.id,
-                        `"${item.name.replace(/"/g, '""')}"`, // Mengelilingi nama dengan tanda kutip untuk menghindari masalah koma
+                        `"${item.name.replace(/"/g, '""')}"`, 
                         item.quantity
                     ];
                     csv += row.join(',') + '\n';
                 });
-
-                // 4. Buat file Blob dan link unduhan
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
-                
                 a.setAttribute('href', url);
                 a.setAttribute('download', `stok_barang_${new Date().toISOString().slice(0, 10)}.csv`);
-                
-                // 5. Trigger unduhan
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
-                
-                // Bersihkan URL Object
                 URL.revokeObjectURL(url);
-
             } catch (error) {
                 alert("Gagal mengunduh data: " + error.message);
             }
