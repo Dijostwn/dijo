@@ -3,28 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Stok Barang Sentral - Final</title>
+    <title>Aplikasi Stok Barang Sentral</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-        h1 { color: #333; text-align: center; }
         .container { max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
         .info-api { background-color: #d4edda; border-left: 5px solid #28a745; padding: 10px; margin-bottom: 20px; color: #155724; }
         #form-tambah { display: flex; gap: 10px; margin-bottom: 30px; }
         #form-tambah input { padding: 12px; flex-grow: 1; border: 1px solid #ddd; border-radius: 4px; }
-        #form-tambah button { padding: 12px 25px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; transition: background-color 0.3s; }
-        #form-tambah button:hover { background-color: #1e7e34; }
+        #form-tambah button { padding: 12px 25px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
         #tabel-stok { width: 100%; border-collapse: collapse; margin-top: 20px; }
         #tabel-stok th, #tabel-stok td { border: 1px solid #e0e0e0; padding: 15px; text-align: left; }
-        #tabel-stok th { background-color: #e9ecef; color: #333; }
         .delete-btn { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Aplikasi Stok Barang (Terpusat) 🌍</h1>
-        <div id="api-status" class="info-api">
-            Menghubungkan ke API Server...
-        </div>
+        <div id="api-status" class="info-api">Menghubungkan ke API Server...</div>
 
         <h2>Tambah Barang Baru</h2>
         <form id="form-tambah">
@@ -35,129 +30,81 @@
 
         <h2>Daftar Stok</h2>
         <table id="tabel-stok">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Nama Barang</th>
-                    <th>Kuantitas</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="data-stok">
-                </tbody>
+            <thead><tr><th>ID</th><th>Nama Barang</th><th>Kuantitas</th><th>Aksi</th></tr></thead>
+            <tbody id="data-stok"></tbody>
         </table>
     </div>
 
     <script>
-        // *** GANTI DENGAN URL PUBLIK DARI RENDER/RAILWAY ANDA ***
-        const API_BASE_URL = 'http://localhost:5000'; // UBAH INI SAAT DEPLOY KE URL PUBLIK ANDA!
-        // Contoh: 'https://nama-unik-anda.onrender.com'
+        // *** GANTI NILAI INI DENGAN URL PUBLIK DARI RENDER ANDA ***
+        const API_BASE_URL = 'http://localhost:5000'; // UBAH INI!
+        // Contoh: 'https://dijo-stok-api.onrender.com'
+        // ********************************************************
 
         const API_URL = `${API_BASE_URL}/api/items`;
         const formTambah = document.getElementById('form-tambah');
         const dataStokBody = document.getElementById('data-stok');
         const apiStatus = document.getElementById('api-status');
 
-        // --- Fungsi Utama (READ) ---
         async function fetchItems() {
             try {
-                // Minta data dari server publik
                 const response = await fetch(API_URL); 
-                
-                if (!response.ok) {
-                    apiStatus.textContent = `Error: Gagal terhubung ke API Server (${response.status} - Pastikan server berjalan!)`;
-                    apiStatus.style.backgroundColor = '#f8d7da';
-                    apiStatus.style.borderColor = '#f5c6cb';
-                    dataStokBody.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center;">Koneksi API Gagal.</td></tr>';
-                    return;
-                }
-                
+                if (!response.ok) throw new Error('Koneksi API Gagal');
                 const stok = await response.json();
                 
                 apiStatus.textContent = `Tersambung ke Server: ${API_BASE_URL}`;
-                apiStatus.style.backgroundColor = '#d4edda';
-                apiStatus.style.borderColor = '#28a745';
-
-                dataStokBody.innerHTML = ''; // Kosongkan tabel
+                dataStokBody.innerHTML = '';
                 
-                if (stok.length === 0) {
-                    dataStokBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #888;">Belum ada barang di server.</td></tr>';
-                    return;
-                }
-
                 stok.forEach(item => {
                     const row = dataStokBody.insertRow();
                     row.insertCell().textContent = item.id;
                     row.insertCell().textContent = item.name;
-                    row.insertCell().textContent = item.quantity ? item.quantity.toLocaleString('id-ID') : 0; 
-
-                    const actionCell = row.insertCell();
+                    row.insertCell().textContent = item.quantity.toLocaleString('id-ID'); 
                     const deleteButton = document.createElement('button');
                     deleteButton.textContent = 'Hapus';
                     deleteButton.className = 'delete-btn';
                     deleteButton.onclick = () => deleteItem(item.id); 
-                    actionCell.appendChild(deleteButton);
+                    row.insertCell().appendChild(deleteButton);
                 });
 
             } catch (error) {
-                console.error("Error Fetching:", error);
                 apiStatus.textContent = 'Error Jaringan: Tidak dapat menghubungi server API.';
                 apiStatus.style.backgroundColor = '#f8d7da';
-                apiStatus.style.borderColor = '#f5c6cb';
                 dataStokBody.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center;">Periksa koneksi server Anda.</td></tr>';
             }
         }
 
-        // --- Fungsi Tambah (CREATE) ---
         formTambah.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
             const name = document.getElementById('nama-barang').value.trim();
             const quantity = parseInt(document.getElementById('kuantitas').value);
 
-            if (name === "" || isNaN(quantity) || quantity <= 0) {
-                alert("Input tidak valid.");
-                return;
-            }
+            if (name === "" || isNaN(quantity) || quantity <= 0) return;
 
             try {
-                const response = await fetch(API_URL, {
+                await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, quantity }) 
                 });
-
-                if (!response.ok) throw new Error('Gagal menambahkan item ke server');
-
                 document.getElementById('nama-barang').value = '';
                 document.getElementById('kuantitas').value = '';
-                
-                fetchItems(); // Muat ulang data dari server
-
+                fetchItems(); 
             } catch (error) {
-                alert("Gagal terhubung ke server untuk menambah item. Pastikan API berjalan.");
+                alert("Gagal menambah item. Pastikan API berjalan.");
             }
         });
 
-        // --- Fungsi Hapus (DELETE) ---
         async function deleteItem(id) {
-            if (!confirm("Apakah Anda yakin ingin menghapus barang ID " + id + "?")) return;
-            
+            if (!confirm("Hapus barang ID " + id + "?")) return;
             try {
-                const response = await fetch(`${API_URL}/${id}`, {
-                    method: 'DELETE'
-                });
-
-                if (!response.ok) throw new Error('Gagal menghapus item dari server');
-                
-                fetchItems(); // Muat ulang data dari server
-
+                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                fetchItems(); 
             } catch (error) {
-                alert("Gagal menghapus: Periksa koneksi ke server.");
+                alert("Gagal menghapus.");
             }
         }
 
-        // --- Inisialisasi ---
         document.addEventListener('DOMContentLoaded', fetchItems);
     </script>
 </body>
