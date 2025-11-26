@@ -14,6 +14,7 @@
         #tabel-stok { width: 100%; border-collapse: collapse; margin-top: 20px; }
         #tabel-stok th, #tabel-stok td { border: 1px solid #e0e0e0; padding: 15px; text-align: left; }
         .delete-btn { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .download-btn { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -28,7 +29,11 @@
             <button type="submit">Tambah Stok</button>
         </form>
 
-        <h2>Daftar Stok</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>Daftar Stok</h2>
+            <button class="download-btn" onclick="downloadInventoryAsCSV()">⬇️ Unduh Data (CSV)</button>
+        </div>
+        
         <table id="tabel-stok">
             <thead><tr><th>ID</th><th>Nama Barang</th><th>Kuantitas</th><th>Aksi</th></tr></thead>
             <tbody id="data-stok"></tbody>
@@ -36,16 +41,15 @@
     </div>
 
     <script>
-        // *** GANTI NILAI INI DENGAN URL PUBLIK DARI RENDER ANDA ***
-        const API_BASE_URL = 'https://inventory-api-production-1cdf.up.railway.app'; // UBAH INI!
-        // Contoh: 'https://dijo-stok-api.onrender.com'
-        // ********************************************************
+        // URL Railway Anda (Sudah benar)
+        const API_BASE_URL = 'https://inventory-api-production-1cdf.up.railway.app'; 
 
         const API_URL = `${API_BASE_URL}/api/items`;
         const formTambah = document.getElementById('form-tambah');
         const dataStokBody = document.getElementById('data-stok');
         const apiStatus = document.getElementById('api-status');
 
+        // Fungsi yang sama untuk mengambil dan menampilkan data (READ)
         async function fetchItems() {
             try {
                 const response = await fetch(API_URL); 
@@ -55,6 +59,11 @@
                 apiStatus.textContent = `Tersambung ke Server: ${API_BASE_URL}`;
                 dataStokBody.innerHTML = '';
                 
+                if (stok.length === 0) {
+                    dataStokBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #888;">Belum ada barang di server.</td></tr>';
+                    return;
+                }
+
                 stok.forEach(item => {
                     const row = dataStokBody.insertRow();
                     row.insertCell().textContent = item.id;
@@ -68,12 +77,62 @@
                 });
 
             } catch (error) {
-                apiStatus.textContent = 'Error Jaringan: Tidak dapat menghubungi server API.';
+                apiStatus.textContent = 'Error Jaringan: Tidak dapat menghubungi server API. (Pastikan Railway Aktif!)';
                 apiStatus.style.backgroundColor = '#f8d7da';
                 dataStokBody.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center;">Periksa koneksi server Anda.</td></tr>';
             }
         }
 
+        // --- FUNGSI BARU UNTUK DOWNLOAD DATA ---
+        async function downloadInventoryAsCSV() {
+            try {
+                // 1. Ambil data stok terbaru dari server
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Gagal mengambil data dari server.');
+
+                const inventory = await response.json();
+
+                if (inventory.length === 0) {
+                    alert("Tidak ada data untuk diunduh.");
+                    return;
+                }
+
+                // 2. Siapkan baris header CSV
+                const headers = ['ID', 'Nama Barang', 'Kuantitas'];
+                let csv = headers.join(',') + '\n';
+
+                // 3. Konversi data JSON ke baris CSV
+                inventory.forEach(item => {
+                    const row = [
+                        item.id,
+                        `"${item.name.replace(/"/g, '""')}"`, // Mengelilingi nama dengan tanda kutip untuk menghindari masalah koma
+                        item.quantity
+                    ];
+                    csv += row.join(',') + '\n';
+                });
+
+                // 4. Buat file Blob dan link unduhan
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                
+                a.setAttribute('href', url);
+                a.setAttribute('download', `stok_barang_${new Date().toISOString().slice(0, 10)}.csv`);
+                
+                // 5. Trigger unduhan
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                
+                // Bersihkan URL Object
+                URL.revokeObjectURL(url);
+
+            } catch (error) {
+                alert("Gagal mengunduh data: " + error.message);
+            }
+        }
+
+        // --- Fungsi Tambah (CREATE) ---
         formTambah.addEventListener('submit', async function(e) {
             e.preventDefault();
             const name = document.getElementById('nama-barang').value.trim();
@@ -95,6 +154,7 @@
             }
         });
 
+        // --- Fungsi Hapus (DELETE) ---
         async function deleteItem(id) {
             if (!confirm("Hapus barang ID " + id + "?")) return;
             try {
