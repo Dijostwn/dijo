@@ -8,7 +8,9 @@
         /* Desain CSS */
         body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
         .container { max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
+        /* Kotak status API, awalnya disembunyikan */
         .info-api { background-color: #d4edda; border-left: 5px solid #28a745; padding: 10px; margin-bottom: 20px; color: #155724; }
+        
         #form-tambah { display: flex; gap: 10px; margin-bottom: 30px; }
         #form-tambah input { padding: 12px; flex-grow: 1; border: 1px solid #ddd; border-radius: 4px; }
         #form-tambah button { padding: 12px 25px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
@@ -24,7 +26,7 @@
         @media print {
             .aksi-kolom { display: none !important; }
             .no-print { display: none !important; }
-            .hide-on-pdf { display: none !important; } /* Baru */
+            .hide-on-pdf { display: none !important; } 
         }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -32,7 +34,7 @@
 <body>
     <div class="container">
         <h1 class="hide-on-pdf">Aplikasi Stok Barang (Terpusat) 🌍</h1>
-        <div id="api-status" class="info-api hide-on-pdf">Menghubungkan ke API Server...</div>
+        <div id="api-status" class="info-api hide-on-pdf">Menghubungkan ke API Server...</div> 
 
         <h2 class="hide-on-pdf">Tambah Barang Baru</h2>
         <form id="form-tambah" class="no-print hide-on-pdf">
@@ -42,7 +44,7 @@
         </form>
 
         <div style="display: flex; justify-content: space-between; align-items: center;" class="hide-on-pdf">
-            <h2>Daftar Stok</h2>
+            <h2 class="pdf-judul">Daftar Stok</h2> 
             <div class="no-print">
                 <button class="download-btn" onclick="downloadInventoryAsCSV()">⬇️ Unduh CSV</button>
                 <button class="pdf-btn" onclick="downloadInventoryAsPDF()">🖨️ Unduh PDF</button>
@@ -50,7 +52,6 @@
         </div>
         
         <div id="pdf-content"> 
-            <h2>Daftar Stok</h2> 
             <table id="tabel-stok">
                 <thead><tr><th>ID</th><th>Nama Barang</th><th>Kuantitas</th><th class="aksi-kolom">Aksi</th></tr></thead>
                 <tbody id="data-stok"></tbody>
@@ -75,7 +76,9 @@
                 if (!response.ok) throw new Error('Koneksi API Gagal');
                 const stok = await response.json();
                 
-                apiStatus.textContent = `Tersambung ke Server: ${API_BASE_URL}`;
+                // PERUBAHAN: Sembunyikan kotak status jika koneksi berhasil
+                apiStatus.style.display = 'none'; 
+                
                 dataStokBody.innerHTML = '';
                 
                 if (stok.length === 0) {
@@ -89,7 +92,6 @@
                     row.insertCell().textContent = item.name;
                     row.insertCell().textContent = item.quantity.toLocaleString('id-ID'); 
                     
-                    // Kolom Aksi
                     const aksiCell = row.insertCell();
                     aksiCell.className = 'aksi-kolom'; 
 
@@ -101,16 +103,28 @@
                 });
 
             } catch (error) {
+                // Tampilkan pesan error jika gagal terhubung
                 apiStatus.textContent = 'Error Jaringan: Tidak dapat menghubungi server API. (Pastikan Railway Aktif!)';
                 apiStatus.style.backgroundColor = '#f8d7da';
+                apiStatus.style.display = 'block'; // Pastikan terlihat
                 dataStokBody.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center;">Periksa koneksi server Anda.</td></tr>';
             }
         }
         
         // --- FUNGSI DOWNLOAD PDF ---
         function downloadInventoryAsPDF() {
-            // Targetkan hanya div #pdf-content
+            // Kontainer yang berisi Tabel Stok
             const element = document.getElementById('pdf-content'); 
+
+            // Tambahkan judul di atas tabel agar terlihat di PDF
+            const judul = document.createElement('h2');
+            judul.textContent = 'Laporan Stok Barang';
+            judul.style.textAlign = 'center';
+            
+            // Buat kontainer sementara untuk PDF
+            const pdfContainer = document.createElement('div');
+            pdfContainer.appendChild(judul);
+            pdfContainer.appendChild(element.cloneNode(true)); // Kloning isi tabel
 
             // Opsi konfigurasi untuk PDF
             const options = {
@@ -121,8 +135,8 @@
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Panggil library untuk membuat PDF
-            html2pdf().set(options).from(element).save();
+            // Panggil library untuk membuat PDF dari kontainer sementara
+            html2pdf().set(options).from(pdfContainer).save();
         }
 
         // --- FUNGSI DOWNLOAD CSV ---
