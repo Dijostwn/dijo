@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulir Lamaran Kerja Modern</title>
+    <title>Formulir Lamaran Kerja Statis</title>
     
     <style>
         /* CSS Dasar: Reset & Font */
@@ -26,13 +26,6 @@
             background-color: #ffffff;
             border-radius: 12px;
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        /* Animasi */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Heading */
@@ -67,7 +60,7 @@
             padding: 12px;
             border: 1px solid #c0c0c0;
             border-radius: 8px;
-            box-sizing: border-box; /* Penting agar padding tidak melebihkan lebar */
+            box-sizing: border-box;
             font-size: 1em;
             transition: border-color 0.3s, box-shadow 0.3s;
         }
@@ -105,7 +98,7 @@
     <div class="form-container">
         <h1>🔍 Formulir Lamaran Kerja</h1>
         
-        <form action="/kirim-lamaran" method="POST"> 
+        <form action="YOUR_FORMSPREE_ENDPOINT" method="POST"> 
             
             <div class="form-group">
                 <label for="nama">Nama Lengkap:</label>
