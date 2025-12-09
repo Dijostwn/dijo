@@ -3,210 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Stok Barang Sentral</title>
+    <title>Formulir Pelamar Kerja</title>
     <style>
-        /* Desain CSS */
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f9; }
-        .container { max-width: 800px; margin: 30px auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); }
-        /* Kotak status API, awalnya disembunyikan */
-        .info-api { background-color: #d4edda; border-left: 5px solid #28a745; padding: 10px; margin-bottom: 20px; color: #155724; }
-        
-        #form-tambah { display: flex; gap: 10px; margin-bottom: 30px; }
-        #form-tambah input { padding: 12px; flex-grow: 1; border: 1px solid #ddd; border-radius: 4px; }
-        #form-tambah button { padding: 12px 25px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        #tabel-stok { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        #tabel-stok th, #tabel-stok td { border: 1px solid #e0e0e0; padding: 15px; text-align: left; }
-        .delete-btn { background-color: #dc3545; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
-        
-        /* Tombol Download */
-        .download-btn { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; }
-        .pdf-btn { padding: 10px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; font-weight: bold; }
-
-        /* Kelas untuk menyembunyikan elemen saat dicetak ke PDF */
-        @media print {
-            .aksi-kolom { display: none !important; }
-            .no-print { display: none !important; }
-            .hide-on-pdf { display: none !important; } 
-        }
+        /* (Style disingkat agar kode tidak terlalu panjang, Anda bisa tambahkan sendiri) */
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1 class="hide-on-pdf">Aplikasi Stok Barang (Terpusat) 🌍</h1>
-        <div id="api-status" class="info-api hide-on-pdf">Menghubungkan ke API Server...</div> 
-
-        <h2 class="hide-on-pdf">Tambah Barang Baru</h2>
-        <form id="form-tambah" class="no-print hide-on-pdf">
-            <input type="text" id="nama-barang" placeholder="Nama Barang" required>
-            <input type="number" id="kuantitas" placeholder="Kuantitas" required min="1">
-            <button type="submit">Tambah Stok</button>
-        </form>
-
-        <div style="display: flex; justify-content: space-between; align-items: center;" class="hide-on-pdf">
-            <h2 class="pdf-judul">Daftar Stok</h2> 
-            <div class="no-print">
-                <button class="download-btn" onclick="downloadInventoryAsCSV()">⬇️ Unduh CSV</button>
-                <button class="pdf-btn" onclick="downloadInventoryAsPDF()">🖨️ Unduh PDF</button>
-            </div>
-        </div>
-        
-        <div id="pdf-content"> 
-            <table id="tabel-stok">
-                <thead><tr><th>ID</th><th>Nama Barang</th><th>Kuantitas</th><th class="aksi-kolom">Aksi</th></tr></thead>
-                <tbody id="data-stok"></tbody>
-            </table>
-        </div>
-    </div>
-
-    <script>
-        // *** URL API ASLI DARI RAILWAY ANDA ***
-        const API_BASE_URL = 'https://inventory-api-production-1cdf.up.railway.app'; 
-        // *************************************
-
-        const API_URL = `${API_BASE_URL}/api/items`;
-        const formTambah = document.getElementById('form-tambah');
-        const dataStokBody = document.getElementById('data-stok');
-        const apiStatus = document.getElementById('api-status');
-
-        // Fungsi untuk mengambil dan menampilkan data terbaru dari server (READ)
-        async function fetchItems() {
-            try {
-                const response = await fetch(API_URL); 
-                if (!response.ok) throw new Error('Koneksi API Gagal');
-                const stok = await response.json();
-                
-                // PERUBAHAN: Sembunyikan kotak status jika koneksi berhasil
-                apiStatus.style.display = 'none'; 
-                
-                dataStokBody.innerHTML = '';
-                
-                if (stok.length === 0) {
-                    dataStokBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #888;">Belum ada barang di server.</td></tr>';
-                    return;
-                }
-
-                stok.forEach(item => {
-                    const row = dataStokBody.insertRow();
-                    row.insertCell().textContent = item.id;
-                    row.insertCell().textContent = item.name;
-                    row.insertCell().textContent = item.quantity.toLocaleString('id-ID'); 
-                    
-                    const aksiCell = row.insertCell();
-                    aksiCell.className = 'aksi-kolom'; 
-
-                    const deleteButton = document.createElement('button');
-                    deleteButton.textContent = 'Hapus';
-                    deleteButton.className = 'delete-btn';
-                    deleteButton.onclick = () => deleteItem(item.id); 
-                    aksiCell.appendChild(deleteButton);
-                });
-
-            } catch (error) {
-                // Tampilkan pesan error jika gagal terhubung
-                apiStatus.textContent = 'Error Jaringan: Tidak dapat menghubungi server API. (Pastikan Railway Aktif!)';
-                apiStatus.style.backgroundColor = '#f8d7da';
-                apiStatus.style.display = 'block'; // Pastikan terlihat
-                dataStokBody.innerHTML = '<tr><td colspan="4" style="color:red; text-align:center;">Periksa koneksi server Anda.</td></tr>';
-            }
-        }
-        
-        // --- FUNGSI DOWNLOAD PDF ---
-        function downloadInventoryAsPDF() {
-            // Kontainer yang berisi Tabel Stok
-            const element = document.getElementById('pdf-content'); 
-
-            // Tambahkan judul di atas tabel agar terlihat di PDF
-            const judul = document.createElement('h2');
-            judul.textContent = 'Laporan Stok Barang';
-            judul.style.textAlign = 'center';
+        <h1>Formulir Pelamar Kerja 📝</h1>
+        <form action="/submit" method="POST"> 
             
-            // Buat kontainer sementara untuk PDF
-            const pdfContainer = document.createElement('div');
-            pdfContainer.appendChild(judul);
-            pdfContainer.appendChild(element.cloneNode(true)); // Kloning isi tabel
+            <label for="nama">Nama Lengkap:</label>
+            <input type="text" id="nama" name="nama" required>
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            
+            <label for="posisi">Posisi Dilamar:</label>
+            <input type="text" id="posisi" name="posisi" required>
 
-            // Opsi konfigurasi untuk PDF
-            const options = {
-                margin: 10,
-                filename: `stok_barang_${new Date().toISOString().slice(0, 10)}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-
-            // Panggil library untuk membuat PDF dari kontainer sementara
-            html2pdf().set(options).from(pdfContainer).save();
-        }
-
-        // --- FUNGSI DOWNLOAD CSV ---
-        async function downloadInventoryAsCSV() {
-            try {
-                const response = await fetch(API_URL);
-                if (!response.ok) throw new Error('Gagal mengambil data dari server.');
-                const inventory = await response.json();
-                if (inventory.length === 0) {
-                    alert("Tidak ada data untuk diunduh.");
-                    return;
-                }
-                const headers = ['ID', 'Nama Barang', 'Kuantitas'];
-                let csv = headers.join(',') + '\n';
-                inventory.forEach(item => {
-                    const row = [
-                        item.id,
-                        `"${item.name.replace(/"/g, '""')}"`, 
-                        item.quantity
-                    ];
-                    csv += row.join(',') + '\n';
-                });
-                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.setAttribute('href', url);
-                a.setAttribute('download', `stok_barang_${new Date().toISOString().slice(0, 10)}.csv`);
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            } catch (error) {
-                alert("Gagal mengunduh data: " + error.message);
-            }
-        }
-
-        // --- Fungsi Tambah (CREATE) ---
-        formTambah.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const name = document.getElementById('nama-barang').value.trim();
-            const quantity = parseInt(document.getElementById('kuantitas').value);
-
-            if (name === "" || isNaN(quantity) || quantity <= 0) return;
-
-            try {
-                await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, quantity }) 
-                });
-                document.getElementById('nama-barang').value = '';
-                document.getElementById('kuantitas').value = '';
-                fetchItems(); 
-            } catch (error) {
-                alert("Gagal menambah item. Pastikan API berjalan.");
-            }
-        });
-
-        // --- Fungsi Hapus (DELETE) ---
-        async function deleteItem(id) {
-            if (!confirm("Hapus barang ID " + id + "?")) return;
-            try {
-                await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-                fetchItems(); 
-            } catch (error) {
-                alert("Gagal menghapus.");
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', fetchItems);
-    </script>
+            <button type="submit">Kirim Lamaran</button>
+        </form>
+    </div>
 </body>
 </html>
