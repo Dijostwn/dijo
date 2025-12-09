@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulir Lamaran Kerja Google Forms</title>
+    <title>Formulir Lamaran Kerja Statis</title>
     
     <style>
         /* CSS Dasar: Reset & Font */
@@ -98,21 +98,24 @@
     <div class="form-container">
         <h1>🔍 Formulir Lamaran Kerja</h1>
         
-        <form action="https://docs.google.com/forms/d/e/1FAIpQLSecSSx5zgrtqqRfqAevHPUmxMu1LMB6RayFadyqc5NRWL3kpQ/formResponse" method="POST"> 
+       <form action="https://docs.google.com/forms/d/e/1FAIpQLSecSSx5zgrtqqRfqAevHPUmxMu1LMB6RayFadyqc5NRWL3kpQ/viewform?usp=dialog" 
+      method="POST" target="_self">
+    <input type="text" name="entry.123456789"> 
+    </form>
             
             <div class="form-group">
                 <label for="nama">Nama Lengkap:</label>
-                <input type="text" id="nama" name="entry.123456789" placeholder="Masukkan nama lengkap Anda" required>
+                <input type="text" id="nama" name="nama_lengkap" placeholder="Masukkan nama lengkap Anda" required>
             </div>
             
             <div class="form-group">
                 <label for="email">Email Kontak:</label>
-                <input type="email" id="email" name="entry.987654321" placeholder="contoh@email.com" required>
+                <input type="email" id="email" name="email_kontak" placeholder="contoh@email.com" required>
             </div>
             
             <div class="form-group">
                 <label for="posisi">Posisi Dilamar:</label>
-                <select id="posisi" name="entry.555444333" required>
+                <select id="posisi" name="posisi_diinginkan" required>
                     <option value="" disabled selected>-- Pilih Posisi yang Diinginkan --</option>
                     <option value="Frontend">Frontend Developer</option>
                     <option value="Backend">Backend Engineer</option>
