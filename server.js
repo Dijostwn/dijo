@@ -1,49 +1,34 @@
-// server.js
-const express = require('express');
-const bodyParser = require('body-parser');
-const fs = require('fs');
-const path = require('path');
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Pelamar Kerja</title>
+    <style>
+        /* (Style disingkat agar kode tidak terlalu panjang, Anda bisa tambahkan sendiri) */
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; margin-bottom: 20px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Formulir Pelamar Kerja 📝</h1>
+        <form action="/submit" method="POST"> 
+            
+            <label for="nama">Nama Lengkap:</label>
+            <input type="text" id="nama" name="nama" required>
+            
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email" required>
+            
+            <label for="posisi">Posisi Dilamar:</label>
+            <input type="text" id="posisi" name="posisi" required>
 
-const app = express();
-const PORT = 3000;
-const DATA_FILE = path.join(__dirname, 'pelamar.json');
-
-// Middleware untuk memparsing data application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: true }));
-// Middleware untuk menyajikan file statis (index.html, dll.)
-app.use(express.static('public'));
-
-// Rute untuk menampilkan halaman utama
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-// Rute untuk memproses pengiriman formulir POST
-app.post('/submit', (req, res) => {
-    const dataPelamar = req.body;
-    dataPelamar.tanggalWaktu = new Date().toISOString();
-
-    console.log('Data diterima:', dataPelamar);
-
-    // Baca data yang sudah ada
-    let pelamar = [];
-    try {
-        const fileContent = fs.readFileSync(DATA_FILE, 'utf8');
-        pelamar = JSON.parse(fileContent);
-    } catch (error) {
-        console.log('File data belum ada atau kosong, membuat array baru.');
-    }
-
-    // Tambahkan data baru
-    pelamar.push(dataPelamar);
-
-    // Tulis kembali ke file
-    fs.writeFileSync(DATA_FILE, JSON.stringify(pelamar, null, 2), 'utf8');
-
-    // Kirim respons sukses
-    res.send('<h1>Lamaran berhasil dikirim dan disimpan!</h1><p><a href="/">Kembali ke formulir</a></p>');
-});
-
-app.listen(PORT, () => {
-    console.log(`Server berjalan di http://localhost:${PORT}`);
-});
+            <button type="submit">Kirim Lamaran</button>
+        </form>
+    </div>
+</body>
+</html>
