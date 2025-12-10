@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Formulir Lamaran Kerja Profesional</title>
+    <title>Formulir Tiket Masalah IT</title>
     
     <style>
         /* CSS Dasar & Reset */
         body { 
-            font-family: 'Poppins', sans-serif; /* Mengganti font yang lebih modern */
-            background-color: #f7f9fc; /* Latar belakang sangat lembut */
+            font-family: 'Poppins', sans-serif; 
+            background-color: #f7f9fc; 
             margin: 0;
             padding: 0;
             display: flex;
@@ -21,26 +21,26 @@
         /* Container Formulir */
         .form-container {
             width: 100%;
-            max-width: 480px; /* Sedikit dikecilkan agar terlihat fokus */
+            max-width: 550px; /* Dibuat sedikit lebih lebar untuk deskripsi */
             padding: 35px;
             background-color: #ffffff;
-            border-radius: 15px; /* Sudut lebih melengkung */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08); /* Bayangan lebih halus dan lebar */
-            border-top: 5px solid #007bff; /* Garis biru sebagai aksen */
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border-top: 5px solid #dc3545; /* Mengganti aksen warna menjadi merah (ala urgensi IT) */
         }
 
         /* Heading */
         h1 {
-            color: #333;
+            color: #1a1a2e;
             text-align: center;
             margin-bottom: 30px;
-            font-size: 1.7em;
+            font-size: 1.8em;
             font-weight: 700;
         }
 
         /* Form Group */
         .form-group {
-            margin-bottom: 25px; /* Jarak antar grup lebih besar */
+            margin-bottom: 25px;
         }
 
         /* Label */
@@ -52,12 +52,13 @@
             font-size: 0.9em;
         }
 
-        /* Input & Select Fields */
+        /* Input, Select, & Textarea Fields */
         input[type="text"], 
         input[type="email"], 
-        select {
+        select,
+        textarea { /* Menambahkan styling untuk textarea */
             width: 100%;
-            padding: 14px; /* Padding lebih besar */
+            padding: 14px;
             border: 1px solid #e0e0e0;
             border-radius: 8px;
             box-sizing: border-box;
@@ -66,18 +67,23 @@
             transition: all 0.3s ease;
         }
 
-        input[type="text"]:focus, 
-        input[type="email"]:focus, 
-        select:focus {
-            border-color: #007bff;
-            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15); /* Efek fokus yang lebih lembut */
+        textarea {
+            resize: vertical; /* Memungkinkan pengguna mengubah ukuran vertikal */
+            min-height: 120px;
+        }
+
+        input:focus, 
+        select:focus,
+        textarea:focus {
+            border-color: #dc3545; /* Efek fokus warna merah */
+            box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.15); 
             outline: none;
             background-color: #fff;
         }
 
         /* Button */
         button {
-            background-color: #007bff;
+            background-color: #dc3545; /* Tombol merah untuk Kirim Tiket */
             color: white;
             padding: 15px 20px;
             border: none;
@@ -91,38 +97,52 @@
         }
 
         button:hover {
-            background-color: #0056b3;
-            box-shadow: 0 4px 10px rgba(0, 90, 180, 0.3);
+            background-color: #c82333;
+            box-shadow: 0 4px 10px rgba(200, 35, 51, 0.3);
         }
     </style>
 </head>
 <body>
     <div class="form-container">
-        <h1>🚀 Kirim Lamaran Anda</h1>
+        <h1>🚨 Buat Tiket Masalah IT</h1>
         
-        <form action="/kirim-lamaran" method="POST"> 
+        <form action="/kirim-tiket" method="POST"> 
             
             <div class="form-group">
-                <label for="nama">Nama Lengkap:</label>
-                <input type="text" id="nama" name="nama_lengkap" placeholder="Contoh: Budi Santoso" required>
+                <label for="nama_pelapor">Nama Pelapor:</label>
+                <input type="text" id="nama_pelapor" name="nama_pelapor" placeholder="Nama Anda" required>
             </div>
             
             <div class="form-group">
-                <label for="email">Email Kontak:</label>
-                <input type="email" id="email" name="email_kontak" placeholder="alamat.anda@domain.com" required>
+                <label for="departemen">Departemen:</label>
+                <select id="departemen" name="departemen" required>
+                    <option value="" disabled selected>-- Pilih Departemen Anda --</option>
+                    <option value="HRD">HRD</option>
+                    <option value="Finance">Finance</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Purchasing">Purchasing</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
             </div>
             
             <div class="form-group">
-                <label for="posisi">Posisi Dilamar:</label>
-                <select id="posisi" name="posisi_diinginkan" required>
-                    <option value="" disabled selected>-- Pilih Posisi --</option>
-                    <option value="Frontend">Frontend Developer</option>
-                    <option value="Backend">Backend Engineer</option>
-                    <option value="Designer">UI/UX Designer</option>
+                <label for="kategori">Kategori Masalah:</label>
+                <select id="kategori" name="kategori_masalah" required>
+                    <option value="" disabled selected>-- Pilih Kategori Masalah --</option>
+                    <option value="Jaringan">Jaringan/Internet</option>
+                    <option value="Hardware">Hardware (Komputer/Printer/Monitor)</option>
+                    <option value="Software">Software/Aplikasi (OS/Office)</option>
+                    <option value="Akun">Akun/Password</option>
+                    <option value="Email">Email</option>
                 </select>
             </div>
 
-            <button type="submit">Kirim Lamaran Sekarang</button>
+            <div class="form-group">
+                <label for="deskripsi">Deskripsi Masalah (Jelaskan Sedetail Mungkin):</label>
+                <textarea id="deskripsi" name="deskripsi" placeholder="Contoh: Printer di ruang Finance tidak terdeteksi di komputer saya sejak jam 10 pagi." required></textarea>
+            </div>
+
+            <button type="submit">Kirim Tiket Masalah</button>
         </form>
         
     </div>
